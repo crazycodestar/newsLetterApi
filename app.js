@@ -1,0 +1,67 @@
+const express = require("express");
+const bodyparser = require("body-parser");
+const https = require("https");
+// const request = require("request");
+
+const app = express();
+app.use(express.static("public"));
+app.use(bodyparser.urlencoded({ extended: true }));
+
+app.get("/", (req, res) => {
+	res.sendFile(`${__dirname}/signup.html`);
+});
+
+app.post("/", (req, res) => {
+	const firstname = req.body.firstname;
+	const lastname = req.body.lastname;
+	const email = req.body.email;
+
+	const data = {
+		members: [
+			{
+				email_address: email,
+				status: "subscribed",
+				merge_fields: {
+					FNAME: firstname,
+					LNAME: lastname,
+				},
+			},
+		],
+	};
+
+	const jsondata = JSON.stringify(data);
+	const url = "https://us10.api.mailchimp.com/3.0/lists/e01765b635";
+	const options = {
+		method: "POST",
+		auth: "olalekan:a1c3ab685ec09e6041f84ce5ca55ec11-us10",
+	};
+
+	const request = https.request(url, options, (response) => {
+		response.on("data", (data) => {
+			// console.log(JSON.parse(data));
+		});
+		if (response.statusCode === 200) {
+			res.sendFile(`${__dirname}/success.html`);
+		} else {
+			res.sendFile(`${__dirname}/failure.html`);
+		}
+	});
+	request.write(jsondata);
+	request.end();
+});
+
+app.post("/retry", (req, res) => {
+	res.redirect("/");
+});
+
+port = process.env.PORT || 3000;
+
+app.listen(port, () => {
+	console.log(`listening on port ${port}`);
+});
+
+//api key
+// a1c3ab685ec09e6041f84ce5ca55ec11-us10
+
+//list id
+// e01765b635
